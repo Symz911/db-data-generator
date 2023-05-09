@@ -16,8 +16,8 @@ type User struct {
 }
 
 type Guild struct {
-	GuildID    uuid.UUID
-	GuildName  string `fake:"{company}"`
+	GuildID    string
+	GuildName  string `fake:"{company} {city}"`
 	GuildOwner uuid.UUID
 	CreatedAt  time.Time
 }
@@ -34,17 +34,8 @@ type Member struct {
 	JoinedAt time.Time
 }
 
-// type FriendList struct {
-// 	UserID   uuid.UUID
-// 	FriendID uuid.UUID
-// }
-
-// type DirectMessage struct {
-// 	FirstUser  uuid.UUID
-// 	SecondUser uuid.UUID
-// }
-
-// type Message struct {
-// 	SenderUser     uuid.UUID
-// 	MsgDestination uuid.UUID
-// }
+type Message struct {
+	SenderUser     uuid.UUID
+	MsgDestination uuid.UUID
+	SentAt         time.Time
+}

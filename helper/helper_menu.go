@@ -74,3 +74,8 @@ func GenerateMemberMenu() int {
 	count := GetInput("How many Members you want to generate: ")
 	return count
 }
+
+func GenerateMessageMenu() int {
+	count := GetInput("How many Messages you want to generate: ")
+	return count
+}

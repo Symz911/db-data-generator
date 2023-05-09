@@ -42,8 +42,8 @@ func main() {
 
 		// Generate dummy Messages data
 		case 5:
-			// count := helper.GenerateMessageMenu()
-			// helper.GenerateMessageData()
+			count := helper.GenerateMessageMenu()
+			helper.GenerateMessageData(DB, &count)
 
 		// Exit from program
 		case 6:

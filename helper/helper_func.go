@@ -14,7 +14,7 @@ func GenerateUserData(DB *gorm.DB, count *int) {
 	for i := 0; i < *count; i++ {
 		var user model.User
 		gofakeit.Struct(&user)
-		user.CreatedAt = gofakeit.DateRange(time.Date(2015, 05, 13, 0, 0, 0, 0, time.UTC) ,time.Now())
+		user.CreatedAt = gofakeit.DateRange(time.Date(2015, 05, 13, 0, 0, 0, 0, time.UTC), time.Now())
 		createUserQuery := "INSERT INTO users (username, email, password, phone_number, description, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
 		DB.Exec(createUserQuery, user.Username, user.Email, user.Password, user.PhoneNumber, user.Description, user.CreatedAt.Format("2006-01-02"))
 	}
@@ -42,8 +42,8 @@ func GenerateGuildData(DB *gorm.DB, count *int) {
 		guild.CreatedAt = gofakeit.DateRange(userCreatedAt, time.Now())
 		createGuildQuery := "INSERT INTO guilds (guild_name, guild_owner, created_at) VALUES ($1, $2, $3) RETURNING guild_id"
 		addOwnerToGuild := "INSERT INTO members (guild_id, user_id, joined_at) VALUES ($1, $2, $3)"
-		DB.Exec(createGuildQuery, guild.GuildName, guild.GuildOwner, guild.CreatedAt.Format("2006-01-02")).Scan(&guild.GuildID)
-		DB.Exec(addOwnerToGuild, guild.GuildID, guild.GuildOwner,guild.CreatedAt.Format("2006-01-02"))
+		DB.Raw(createGuildQuery, guild.GuildName, guild.GuildOwner, guild.CreatedAt.Format("2006-01-02")).Scan(&guild.GuildID)
+		DB.Exec(addOwnerToGuild, guild.GuildID, guild.GuildOwner, guild.CreatedAt.Format("2006-01-02"))
 	}
 
 	ClearScreen()
@@ -83,13 +83,13 @@ func GenerateChannelData(DB *gorm.DB, count *int) {
 	fmt.Println(*count, "channels successfully added to the database!")
 }
 
-func GetRandomChannel(DB *gorm.DB) uuid.UUID {
-	var channelID uuid.UUID
-	err := DB.Table("channels").Select("channel_id").Order("RANDOM()").Limit(1).Row().Scan(&channelID)
+func GetRandomChannel(DB *gorm.DB) (uuid.UUID, uuid.UUID) {
+	var channelID, guildID uuid.UUID
+	err := DB.Table("channels").Select("channel_id, guild_id").Order("RANDOM()").Limit(1).Row().Scan(&channelID, &guildID)
 	if err != nil {
 		panic(err)
 	}
-	return channelID
+	return channelID, guildID
 }
 
 func GenerateMemberData(DB *gorm.DB, count *int) {
@@ -105,4 +105,21 @@ func GenerateMemberData(DB *gorm.DB, count *int) {
 
 	ClearScreen()
 	fmt.Println(*count, "members successfully added to the database!")
+}
+
+func GenerateMessageData(DB *gorm.DB, count *int) {
+	for i := 0; i < *count; i++ {
+		var message model.Message
+		var guildID uuid.UUID
+		var guildCreatedAt time.Time
+		message.SenderUser, _ = GetRandomUser(DB)
+		message.MsgDestination, guildID = GetRandomChannel(DB)
+		DB.Raw("SELECT created_at FROM guilds WHERE guild_id = $1", guildID).Scan(&guildCreatedAt)
+		message.SentAt = gofakeit.DateRange(guildCreatedAt, time.Now())
+		createMessageQuery := "INSERT INTO messages (sender_user, msg_destination, sent_at) VALUES ($1, $2, $3)"
+		DB.Exec(createMessageQuery, message.SenderUser, message.MsgDestination, message.SentAt)
+	}
+
+	ClearScreen()
+	fmt.Println(*count, "messages successfully added to the database!")
 }
